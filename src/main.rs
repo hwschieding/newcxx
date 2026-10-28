@@ -1,4 +1,4 @@
-use std::{env};
+use std::{env, sync::Arc};
 
 mod arguments;
 mod file_setup;
@@ -8,8 +8,9 @@ use arguments::RunMode;
 pub static DEFAULT_CXX_STANDARD: &str = "20";
 pub static DEFAULT_MIN_CMAKE: &str = "3.20";
 
-fn main() {
-    if let Err(e) = run()
+#[tokio::main]
+async fn main() {
+    if let Err(e) = run().await
     {
         eprintln!("Runtime error: {e}");
         help();
@@ -17,7 +18,7 @@ fn main() {
     }
 }
 
-fn run() -> Result<(), Box<dyn std::error::Error>>
+async fn run() -> Result<(), Box<dyn std::error::Error>>
 {
     let args = env::args().collect::<Vec<_>>();
     let settings = match RunMode::from_args(args)?
@@ -27,9 +28,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>>
     };
 
     // println!("{:?}", settings);
-    file_setup::setup_workspace(&settings)?;
-
-    Ok(())
+    file_setup::setup_workspace(Arc::new(settings)).await
 }
 
 fn help() -> ()
