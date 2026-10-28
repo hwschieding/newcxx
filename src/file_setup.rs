@@ -1,20 +1,26 @@
 
 use crate::DEFAULT_MIN_CMAKE;
 use crate::arguments::Settings;
-use std::{fs, io::{self, Write}, path::Path};
+use std::{fs, io::{self, Write}, path::{Path, PathBuf}};
 
 pub fn setup_workspace(conf: &Settings) -> io::Result<()>
 {
-    make_dirs(conf)?;
-    write_base_cmake_lists(conf)?;
-    src_dir_cmake_lists(conf)?;
-    make_project_file(conf)?;
+    let proj_dir = create_project_dir(conf)?;
+    make_dirs(&proj_dir)?;
+    write_base_cmake_lists(conf, &proj_dir)?;
+    src_dir_cmake_lists(conf, &proj_dir)?;
+    make_project_file(&proj_dir)?;
     Ok(())
 }
 
-fn write_base_cmake_lists(conf: &Settings) -> io::Result<()>
+fn create_project_dir(conf: &Settings) -> io::Result<PathBuf>
 {
-    let mut file = fs::File::create(conf.out_dir().join("CMakeLists.txt"))?;
+    Ok(conf.out_dir().join(Path::new(conf.project_name())))
+}
+
+fn write_base_cmake_lists(conf: &Settings, proj_dir: &Path) -> io::Result<()>
+{
+    let mut file = fs::File::create(proj_dir.join("CMakeLists.txt"))?;
 
     writeln!(file, "cmake_minimum_required(VERSION {DEFAULT_MIN_CMAKE})")?;
     writeln!(file, "\nproject({} LANGUAGES CXX)", conf.project_name())?;
@@ -33,9 +39,9 @@ fn write_base_cmake_lists(conf: &Settings) -> io::Result<()>
     Ok(())
 }
 
-fn src_dir_cmake_lists(conf: &Settings) -> io::Result<()>
+fn src_dir_cmake_lists(conf: &Settings, proj_dir: &Path) -> io::Result<()>
 {
-    let mut file = fs::File::create(conf.out_dir().join("src/CMakeLists.txt"))?;
+    let mut file = fs::File::create(proj_dir.join("src/CMakeLists.txt"))?;
 
     writeln!(file, "file(GLOB_RECURSE PROJECT_HEADERS CONFIGURE_DEPENDS \"include/*.h\")")?;
     
@@ -53,18 +59,14 @@ fn src_dir_cmake_lists(conf: &Settings) -> io::Result<()>
     Ok(())
 }
 
-fn make_dirs(conf: &Settings) -> io::Result<()>
+fn make_dirs(proj_dir: &Path) -> io::Result<()>
 {
-    fs::create_dir_all(
-        conf
-        .out_dir()
-        .join(Path::new("src/include"))
-    )
+    fs::create_dir_all(proj_dir.join(Path::new("src/include")))
 }
 
-fn make_project_file(conf: &Settings) -> io::Result<()>
+fn make_project_file(proj_dir: &Path) -> io::Result<()>
 {
-    let mut file = fs::File::create(conf.out_dir().join("src/main.cpp"))?;
+    let mut file = fs::File::create(proj_dir.join("src/main.cpp"))?;
 
     writeln!(file, "#include <iostream>")?;
     writeln!(file, "\nint main(int argc, char* argv[])")?;
