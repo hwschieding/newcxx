@@ -28,7 +28,7 @@ fn write_base_cmake_lists(conf: &Settings) -> io::Result<()>
     writeln!(file, "set(CMAKE_CXX_STANDARD_REQUIRED ON)")?;
     writeln!(file, "set(CMAKE_CXX_EXTENSIONS OFF)")?;
 
-    writeln!(file, "add_subdirectory(src)")?;
+    writeln!(file, "\nadd_subdirectory(src)")?;
 
     Ok(())
 }
