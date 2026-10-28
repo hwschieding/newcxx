@@ -26,7 +26,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>>
         RunMode::Help => { help(); return Ok(()); }
     };
 
-    println!("{:?}", settings);
+    // println!("{:?}", settings);
     file_setup::setup_workspace(&settings)?;
 
     Ok(())
