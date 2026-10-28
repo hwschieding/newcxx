@@ -1,19 +1,21 @@
 
 use crate::DEFAULT_MIN_CMAKE;
 use crate::arguments::Settings;
+use git2::{Repository};
 use std::{fs, io::{self, Write}, path::{Path, PathBuf}};
 
-pub fn setup_workspace(conf: &Settings) -> io::Result<()>
+pub fn setup_workspace(conf: &Settings) -> Result<(), Box<dyn std::error::Error>>
 {
-    let proj_dir = create_project_dir(conf)?;
+    let proj_dir = get_project_dir(conf)?;
     make_dirs(&proj_dir)?;
     write_base_cmake_lists(conf, &proj_dir)?;
     src_dir_cmake_lists(conf, &proj_dir)?;
     make_project_file(&proj_dir)?;
+    init_git_repo(&proj_dir)?;
     Ok(())
 }
 
-fn create_project_dir(conf: &Settings) -> io::Result<PathBuf>
+fn get_project_dir(conf: &Settings) -> io::Result<PathBuf>
 {
     Ok(conf.out_dir().join(Path::new(conf.project_name())))
 }
@@ -57,6 +59,11 @@ fn src_dir_cmake_lists(conf: &Settings, proj_dir: &Path) -> io::Result<()>
     writeln!(file, "#\n#)")?;
 
     Ok(())
+}
+
+fn init_git_repo(proj_dir: &Path) -> Result<Repository, git2::Error>
+{
+    Repository::init(proj_dir)
 }
 
 fn make_dirs(proj_dir: &Path) -> io::Result<()>
