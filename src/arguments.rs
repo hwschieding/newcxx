@@ -107,7 +107,7 @@ impl SettingsBuilder
                     String::from(DEFAULT_CXX_STANDARD)
                 ),
                 compile_commands: self.compile_commands_build,
-                out_dir: self.output_directory.unwrap_or(default_out_dir()?)
+                out_dir: self.output_directory.unwrap_or(default_out_dir()?),
             }),
             None => Err(SettingsError::MissingArg("No name specified"))
         }
@@ -125,29 +125,6 @@ pub struct Settings
 
 impl Settings
 {
-    pub fn from_args(raw_args: Vec<String>) -> Result<Self, SettingsError>
-    {
-        let mut builder = SettingsBuilder::new();
-
-        let mut args_iter = raw_args.into_iter();
-        args_iter.next();
-        while let Some(arg) = args_iter.next()
-        {
-            match arg.to_lowercase().as_str()
-            {
-                "--name" => builder.set_name(args_iter.next())?,
-                "-n" => builder.set_name(args_iter.next())?,
-                "--standard" => builder.set_standard(args_iter.next())?,
-                "-s" => builder.set_standard(args_iter.next())?,
-                "--compcommand" => builder.set_compile_commands(true),
-                "-o" => builder.set_out_dir(args_iter.next())?,
-                _ => { println!("Unrecognized argument") },
-            }
-        }
-        
-        builder.build()
-    }
-
     pub fn project_name(&self) -> &String
     {
         &self.project_name
@@ -166,5 +143,39 @@ impl Settings
     pub fn out_dir(&self) -> &PathBuf
     {
         &self.out_dir
+    }
+}
+
+pub enum RunMode
+{
+    Normal(Settings),
+    Help,
+}
+impl RunMode
+{
+    pub fn from_args(raw_args: Vec<String>) -> Result<Self, SettingsError>
+    {
+        let mut builder = SettingsBuilder::new();
+
+        let mut args_iter = raw_args.into_iter();
+        args_iter.next();
+        while let Some(arg) = args_iter.next()
+        {
+            match arg.to_lowercase().as_str()
+            {
+                "--name" => builder.set_name(args_iter.next())?,
+                "-n" => builder.set_name(args_iter.next())?,
+                "--standard" => builder.set_standard(args_iter.next())?,
+                "-s" => builder.set_standard(args_iter.next())?,
+                "--compcommand" => builder.set_compile_commands(true),
+                "-o" => builder.set_out_dir(args_iter.next())?,
+                "-h" => { return Ok(Self::Help) },
+                "-help" => { return Ok(Self::Help) },
+                "--help" => { return Ok(Self::Help) },
+                _ => { println!("Unrecognized argument") },
+            }
+        }
+        
+        Ok(Self::Normal(builder.build()?))
     }
 }
