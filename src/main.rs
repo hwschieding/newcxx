@@ -33,7 +33,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>>
 
 fn help() -> ()
 {
-    println!("{} v{}
+    println!("{} v{} (https://github.com/hwschieding/newcxx)
 \nOPTIONS
   [-n|--name] <project name>: Name of the new project (required)
   [-s|--standard] <c++ standard>: C++ standard (default: 20)
